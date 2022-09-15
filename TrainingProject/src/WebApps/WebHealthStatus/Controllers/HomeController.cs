@@ -8,5 +8,19 @@ namespace WebHealthStatus.Controllers
         {
             return View();
         }
+
+        [Route("Privacy")]
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [Route("Error")]
+        public IActionResult Error()
+        {
+            return View();
+        }
+
+
     }
 }
