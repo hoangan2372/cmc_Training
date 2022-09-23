@@ -1,33 +1,29 @@
 using Common.Logging;
+using Product.API.Extensions;
+using Product.API.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseSerilog(Serilogger.Configure);
 Log.Information(messageTemplate: "Starting Product API Up");
 
 try
 {
+    // Add host configurations to the container.
+    builder.Host.UseSerilog(Serilogger.Configure);
+    builder.Host.AddAppConfigurations();
+
     // Add services to the container.
+    builder.Services.AddInfrastructure(builder.Configuration);
 
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
+    // Use services.
     var app = builder.Build();
+    app.UseInfrastructure();
 
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    //migrate database on buid
+    app.MigrateDatabase<ProductContext>((context, _) =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
-    app.UseHttpsRedirection();
-
-    app.UseAuthorization();
-
-    app.MapControllers();
+        ProductContextSeed.SeedProductAsync(context, Log.Logger).Wait();
+    });
 
     app.Run();
 }
